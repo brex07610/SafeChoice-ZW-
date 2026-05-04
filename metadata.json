@@ -1,0 +1,12 @@
+{
+  "name": "SafeChoice ZW",
+  "description": "A comprehensive HIV and pregnancy prevention health app for Zimbabwean university students. Features anonymous Q&A, risk assessment, clinic locator, and community support.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "Firebase",
+    "Real-time Forum",
+    "Health Assessment Engine"
+  ]
+}

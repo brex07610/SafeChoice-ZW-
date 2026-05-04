@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "An anonymous health question from a user",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string", "description": "The question text" },
+        "category": { "type": "string", "enum": ["HIV", "Pregnancy", "General"] },
+        "status": { "type": "string", "enum": ["pending", "answered"] },
+        "answer": { "type": "string", "description": "Verified answer from an admin" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "answeredAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["content", "category", "status", "createdAt"]
+    },
+    "Clinic": {
+      "title": "Clinic",
+      "description": "Health clinic location details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "province": { "type": "string" },
+        "services": { "type": "array", "items": { "type": "string" } },
+        "isYouthFriendly": { "type": "boolean" },
+        "verified": { "type": "boolean" },
+        "coordinates": { "type": "object", "properties": { "lat": { "type": "number" }, "lng": { "type": "number" } } }
+      }
+    },
+    "ForumPost": {
+      "title": "Forum Post",
+      "description": "An anonymous community discussion post",
+      "type": "object",
+      "properties": {
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "anonymousUsername": { "type": "string" },
+        "upvotes": { "type": "integer" },
+        "reportCount": { "type": "integer", "description": "Number of times this post has been reported" },
+        "status": { "type": "string", "enum": ["pending", "approved", "removed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "questions/{questionId}": {
+      "schema": "Question",
+      "description": "Collection of health questions"
+    },
+    "clinics/{clinicId}": {
+      "schema": "Clinic",
+      "description": "Collection of clinic locations"
+    },
+    "forum_posts/{postId}": {
+      "schema": "ForumPost",
+      "description": "Community forum posts"
+    }
+  }
+}

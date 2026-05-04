@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Questions ---
+    match /questions/{questionId} {
+      function isValidQuestion(data) {
+        return data.content is string && data.content.size() <= 1000 &&
+               data.category in ['HIV', 'Pregnancy', 'General'] &&
+               data.status in ['pending', 'answered'] &&
+               data.createdAt is timestamp &&
+               data.keys().hasAll(['content', 'category', 'status', 'createdAt']) &&
+               data.keys().size() >= 4;
+      }
+
+      allow read: if true; // Publicly readable for the hub
+      allow create: if isValidQuestion(incoming()) && 
+                       incoming().status == 'pending' &&
+                       incoming().createdAt == request.time;
+      // Admin update only - logic below assumes admins exist in an 'admins' collection
+      allow update: if false; // For now, no client-side admin updates
+    }
+
+    // --- Clinics ---
+    match /clinics/{clinicId} {
+      allow read: if true;
+      allow write: if false; // Seeded/Admin only via Console
+    }
+
+    // --- Forum Posts ---
+    match /forum_posts/{postId} {
+      function isValidPost(data) {
+        return data.content is string && data.content.size() <= 2000 &&
+               data.category in ['Support', 'HIV', 'Pregnancy', 'General', 'All'] &&
+               data.anonymousUsername is string &&
+               data.upvotes is int &&
+               data.status in ['pending', 'approved', 'removed'] &&
+               data.createdAt is timestamp;
+      }
+
+      allow read: if true;
+      allow create: if isValidPost(incoming()) && 
+                       incoming().status == 'pending' &&
+                       incoming().upvotes == 0 &&
+                       incoming().createdAt == request.time;
+      
+      allow update: if (
+        // Action: Upvote
+        (incoming().diff(existing()).affectedKeys().hasOnly(['upvotes']) &&
+        incoming().upvotes == existing().upvotes + 1) ||
+        // Action: Report
+        (incoming().diff(existing()).affectedKeys().hasOnly(['reportCount']) &&
+        incoming().reportCount == existing().reportCount + 1)
+      );
+    }
+  }
+}
